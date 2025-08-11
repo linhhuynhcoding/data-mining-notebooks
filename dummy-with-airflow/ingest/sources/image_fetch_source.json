@@ -1,0 +1,82 @@
+[
+    {
+        "domain": "NATURAL",
+        "keywords": [
+            ["ocean waves", 120],
+            ["blue sea", 120],
+            ["waterfall in forest", 120],
+            ["river with rocks", 120],
+            ["tropical beach", 120],
+            ["green mountain landscape", 120],
+            ["forest in autumn", 120],
+            ["snow covered mountains", 120],
+            ["desert landscape", 120],
+            ["jungle wildlife", 120],
+            ["sunrise over mountains", 120],
+            ["sunset at beach", 120],
+            ["rainbow over field", 120],
+            ["storm clouds", 120],
+            ["volcano eruption", 120]
+        ]
+    },
+    {
+        "domain": "MEDICINE",
+        "keywords": [
+            ["blister pack of pills", 120],
+            ["pile of colorful capsules", 120],
+            ["white and pink tablets", 120],
+            ["syringe with needle", 120],
+            ["stethoscope on table", 120],
+            ["doctor wearing white coat", 120],
+            ["nurse giving injection", 120],
+            ["hospital ward", 120],
+            ["patient on hospital bed", 120],
+            ["operating room with surgeons", 120],
+            ["x-ray image of chest", 120],
+            ["MRI scan machine", 120],
+            ["blood sample in test tube", 120],
+            ["medical laboratory", 120],
+            ["thermometer close up", 120]
+        ]
+    },
+    {
+        "domain": "TECHNOLOGY",
+        "keywords": [
+            ["modern smartphone", 120],
+            ["gaming laptop", 120],
+            ["smart watch on wrist", 120],
+            ["desktop computer setup", 120],
+            ["tablet device on desk", 120],
+            ["humanoid robot", 120],
+            ["AI generated image", 120],
+            ["robotic arm in factory", 120],
+            ["drone flying in sky", 120],
+            ["autonomous car", 120],
+            ["data center servers", 120],
+            ["fiber optic cables", 120],
+            ["5G cell tower", 120],
+            ["satellite dish", 120],
+            ["circuit board close up", 120]
+        ]
+    },
+    {
+        "domain": "EDUCATION",
+        "keywords": [
+            ["classroom with students", 120],
+            ["teacher writing on blackboard", 120],
+            ["school building front view", 120],
+            ["science laboratory in school", 120],
+            ["library with books", 120],
+            ["students taking exam", 120],
+            ["group study in library", 120],
+            ["online learning at home", 120],
+            ["graduation ceremony", 120],
+            ["children reading books", 120],
+            ["stack of textbooks", 120],
+            ["notebook and pen on desk", 120],
+            ["whiteboard with equations", 120],
+            ["globe and map in classroom", 120],
+            ["microscope for biology class", 120]
+        ]
+    }
+]
