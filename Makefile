@@ -1,3 +1,7 @@
+install-env:
+	sudo apt install python3-venv
+	python3 -m venv ~/python/venv
+	
 
 load-env: source ~/python/venv/bin/activate
 
