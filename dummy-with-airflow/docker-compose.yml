@@ -1,0 +1,92 @@
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.9.3-python3.11
+  environment: &airflow-env
+    # Dùng Postgres cho LocalExecutor (bắt buộc)
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: "120"
+    AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
+
+    # Cài requirements trong webserver/scheduler (dev/test OK)
+    _PIP_ADDITIONAL_REQUIREMENTS: "-r /opt/airflow/requirements.txt"
+
+    # ENV app (MinIO + Pexels)
+    MINIO_HOST: ${MINIO_HOST}
+    MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+    MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    MINIO_SECURE: ${MINIO_SECURE:-false}
+    MINIO_BUCKET: ${MINIO_BUCKET:-datalake}
+    PEXELS_API_KEY: ${PEXELS_API_KEY:-}
+    TZ: Asia/Ho_Chi_Minh
+
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./ingest:/opt/airflow/ingest
+    - ./clean:/opt/airflow/clean
+    - ./preprocess:/opt/airflow/preprocess
+    - ./feature:/opt/airflow/feature
+    - ./logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+    - ./requirements.txt:/opt/airflow/requirements.txt
+
+  # dùng UID của bạn để tránh lỗi quyền
+  user: "${AIRFLOW_UID:-50000}:0"
+
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+  # ⚠️ airflow-init KHÔNG chạy pip khi là root → tắt auto-pip ở init
+  airflow-init:
+    <<: *airflow-common
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"                # <— tránh nó chạy lại sau khi exit 0
+    environment:
+      <<: *airflow-env
+      _PIP_ADDITIONAL_REQUIREMENTS: ""     # tắt pip trong init để tránh lỗi root
+    command: >
+      bash -c "mkdir -p /opt/airflow/logs &&
+      airflow db migrate &&
+      airflow users create --username admin --password admin
+      --firstname Admin --lastname User --role Admin --email admin@example.com"
+
+  airflow-webserver:
+    <<: *airflow-common
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: webserver
+    ports:
+      - "8008:8080"   # UI tại http://localhost:8008
+
+  airflow-scheduler:
+    <<: *airflow-common
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: scheduler
+
+volumes:
+  pgdata:
