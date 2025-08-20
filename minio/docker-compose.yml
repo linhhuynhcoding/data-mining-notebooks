@@ -7,8 +7,8 @@ services:
       - "9000:9000"   # S3 API
       - "9001:9001"   # Web console
     environment:
-      MINIO_ROOT_USER: ductaiphan
-      MINIO_ROOT_PASSWORD: ductaiphan
+      MINIO_ROOT_USER: nhatlinh
+      MINIO_ROOT_PASSWORD: nhatlinh
     command: server --console-address ":9001" /data
     volumes:
       - ./data:/data        # Tạo thư mục ./data trước khi up

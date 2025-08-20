@@ -16,15 +16,14 @@ class ImageFetcher:
             content_type=content_type
         )
 
-    def fetch(self, domain: str, keyword: str, target: int, per_page: int = 30) -> pd.DataFrame:
+    def fetch(self, domain: str, keyword: str, target: int, per_page: int = 30, current_page: int = 0) -> tuple[pd.DataFrame, int]:
         headers = {"Authorization": self.api_key}
         rows = []
-        page = 1
         count = 0
         batch_id = str(uuid.uuid4())
 
         while count < target:
-            params = {"query": keyword, "per_page": per_page, "page": page}
+            params = {"query": keyword, "per_page": per_page, "page": current_page}
             r = requests.get(self.API_URL, headers=headers, params=params, timeout=30)
             if r.status_code == 429:
                 time.sleep(60)  # rate limit
@@ -67,7 +66,7 @@ class ImageFetcher:
                 })
                 count += 1
 
-            page += 1
+            current_page += 1
 
         df = pd.DataFrame(rows)
         if len(df):
@@ -77,4 +76,4 @@ class ImageFetcher:
             df.to_parquet(bio, index=False)
             self._put_bytes(out_key, bio.getvalue(), content_type="application/octet-stream")
 
-        return df
+        return df, current_page  - 1
