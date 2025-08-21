@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+.venv/
+.env
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDEs
+.vscode/
+.idea/
+
+# Data Files
+data/
+*.csv
+*.json
+*.parquet
+*.hdf5
+*.pkl
+*.pickle
+*.npy
+*.npz
+
+# Models
+models/
+*.h5
+*.ckpt
+*.pt
+*.pth
+
+# Results and Outputs
+results/
+outputs/
+*.log
+*.err
