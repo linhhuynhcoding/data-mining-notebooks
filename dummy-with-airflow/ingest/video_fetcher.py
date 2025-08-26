@@ -74,7 +74,7 @@ class VideoFetcher:
 
         df = pd.DataFrame(rows)
         if len(df):
-            out_key = f"metadata/raw_videos/{domain}/{batch_id}.parquet"
+            out_key = f"metadata/raw/videos/{domain}/{batch_id}.parquet"
             bio = io.BytesIO()
             df.to_parquet(bio, index=False)
             self._put_bytes(out_key, bio.getvalue(), content_type="application/octet-stream")

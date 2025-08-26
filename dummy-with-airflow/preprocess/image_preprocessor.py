@@ -1,18 +1,20 @@
 import io, numpy as np, pandas as pd
-from PIL import Image
+from PIL import Image, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class ImagePreprocessor:
-    def __init__(self, minio_client, bucket: str, out_size=(224,224)):
+    def __init__(self, minio_client, bucket: str, out_size=(224, 224), save_npy: bool=False):
         self.client = minio_client
         self.bucket = bucket
         self.out_size = out_size
+        self.save_npy = save_npy
 
     def _get_bytes(self, key: str) -> bytes:
         resp = self.client.get_object(self.bucket, key)
-        data = resp.read()
-        resp.close()
-        resp.release_conn()
-        return data
+        try:
+            return resp.read()
+        finally:
+            resp.close(); resp.release_conn()
 
     def _put_bytes(self, key: str, b: bytes, content_type="application/octet-stream"):
         self.client.put_object(self.bucket, key, io.BytesIO(b), length=len(b), content_type=content_type)
@@ -33,17 +35,26 @@ class ImagePreprocessor:
             b = self._get_bytes(m["cleaned_path"])
             img = Image.open(io.BytesIO(b)).convert("RGB")
             img = self._resize_center_crop(img)
-            arr = (np.asarray(img, dtype=np.float32) / 255.0)  # HWC [0..1]
-            npy = arr.astype("float32")
 
-            npy_key = m["cleaned_path"].replace("cleaned/images/", "preprocessed/images/")\
-                                       .rsplit(".",1)[0] + ".npy"
-            bio = io.BytesIO()
-            np.save(bio, npy)
-            self._put_bytes(npy_key, bio.getvalue())
+            jpeg_buf = io.BytesIO()
+            img.save(jpeg_buf, format="JPEG", quality=90, optimize=True)
+            jpeg_key = m["cleaned_path"].replace("cleaned/images/", "preprocessed/images/")\
+                                        .rsplit(".",1)[0] + ".jpg"
+            self._put_bytes(jpeg_key, jpeg_buf.getvalue(), content_type="image/jpeg")
 
             out = dict(m)
-            out["tensor_path"] = npy_key
+            out["object_key_processed"] = jpeg_key
+            out["width"], out["height"] = img.size
+
+            if self.save_npy:
+                arr = (np.asarray(img, dtype=np.float32) / 255.0)  # HWC [0..1]
+                npy_buf = io.BytesIO()
+                np.save(npy_buf, arr.astype("float32"))
+                npy_key = jpeg_key.replace("preprocessed/images/", "preprocessed_npy/images/")\
+                                  .rsplit(".",1)[0] + ".npy"
+                self._put_bytes(npy_key, npy_buf.getvalue())
+                out["tensor_path"] = npy_key
+
             rows.append(out)
 
         return pd.DataFrame(rows)
