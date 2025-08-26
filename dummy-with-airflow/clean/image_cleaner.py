@@ -104,7 +104,15 @@ class ImageCleaner:
             index_df = self._read_index_df(domain)
             # các set/array để tra nhanh
             known_sha = set(index_df["sha256"].tolist()) if len(index_df) else set()
-            known_phash = index_df["phash64"].astype("Int64").dropna().astype(int).tolist() if len(index_df) else []
+            if len(index_df):
+                known_phash = (
+                    index_df["phash64"]
+                    .dropna()
+                    .apply(lambda x: int(x, 16) if isinstance(x, str) else int(x))
+                    .tolist()
+                )
+            else:
+                known_phash = []
 
             accepted_index_rows = []
             duplicate_rows = []
@@ -159,7 +167,7 @@ class ImageCleaner:
                 accepted_index_rows.append({
                     "sha256": sha256,
                     "md5": md5,
-                    "phash64": int(ph64),
+                    "phash64": hex(ph64),
                     "object_key_cleaned": cleaned_key,
                     "item_id": m.get("id"),
                     "keyword": m.get("keyword"),
