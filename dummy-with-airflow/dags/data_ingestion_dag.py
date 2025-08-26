@@ -142,7 +142,9 @@ default_args = {
 with DAG(
     dag_id="data_ingestion_pipeline",
     start_date=datetime(2025, 8, 1),
-    schedule_interval="0 9 * * *",   # chạy hàng ngày lúc 09:00 UTC
+    # schedule_interval="0 9 * * *",   #  09:00 UTC
+    schedule_interval=None,
+
     catchup=False,
     max_active_runs=1,
     default_args=default_args,
