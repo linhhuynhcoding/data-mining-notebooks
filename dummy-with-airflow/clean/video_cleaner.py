@@ -18,9 +18,9 @@ class VideoCleaner:
     - Chống trùng bằng perceptual hash (pHash) khung đầu tiên, với ngưỡng Hamming (near-duplicate)
     - Lưu:
         cleaned mp4 -> cleaned/videos/{domain}/{keyword}/...
-        cleaned metadata parquet -> metadata/cleaned_videos/{domain}/{batch_id}.parquet
-        duplicates parquet       -> metadata/cleaned_videos/{domain}/{batch_id}_duplicates.parquet
-        pHash index per-domain   -> metadata/cleaned_videos/index/{domain}/phash_index.parquet
+        cleaned metadata parquet -> metadata/cleaned/videos/{domain}/{batch_id}.parquet
+        duplicates parquet       -> metadata/cleaned/videos/{domain}/{batch_id}_duplicates.parquet
+        pHash index per-domain   -> metadata/cleaned/videos/index/{domain}/phash_index.parquet
     - Trả: DataFrame các bản ghi KHÔNG TRÙNG để pipeline chạy tiếp
     """
     def __init__(
@@ -60,7 +60,7 @@ class VideoCleaner:
 
     # ---------- pHash index (per-domain) ----------
     def _index_key(self, domain: str) -> str:
-        return f"metadata/cleaned_videos/index/{domain}/phash_index.parquet"
+        return f"metadata/cleaned/videos/index/{domain}/phash_index.parquet"
 
     def _load_index(self, domain: str) -> pd.DataFrame:
         b = self._try_get(self._index_key(domain))
@@ -183,14 +183,14 @@ class VideoCleaner:
             # ghi manifest cleaned & duplicates cho batch (nếu có)
             df_keep = pd.DataFrame([r for r in kept_rows if r["domain"] == domain])
             if not df_keep.empty:
-                key = f"metadata/cleaned_videos/{domain}/{batch_id}.parquet"
+                key = f"metadata/cleaned/videos/{domain}/{batch_id}.parquet"
                 bio = io.BytesIO()
                 df_keep.to_parquet(bio, index=False)
                 self._put_bytes(key, bio.getvalue(), content_type="application/octet-stream")
 
             if dup_rows:
                 df_dup = pd.DataFrame(dup_rows)
-                key = f"metadata/cleaned_videos/{domain}/{batch_id}_duplicates.parquet"
+                key = f"metadata/cleaned/videos/{domain}/{batch_id}_duplicates.parquet"
                 bio = io.BytesIO()
                 df_dup.to_parquet(bio, index=False)
                 self._put_bytes(key, bio.getvalue(), content_type="application/octet-stream")

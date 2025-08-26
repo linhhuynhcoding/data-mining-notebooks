@@ -16,9 +16,9 @@ class ImageCleaner:
     - Lọc trùng: sha256 tuyệt đối + pHash (Hamming <= threshold)
     - Ghi:
         cleaned jpg -> cleaned/images/{domain}/{keyword}/xxx.jpg
-        cleaned metadata parquet -> metadata/cleaned_images/{domain}/{batch_id}.parquet
-        duplicates parquet       -> metadata/cleaned_images/{domain}/{batch_id}_duplicates.parquet
-        hash index per-domain    -> metadata/cleaned_images/index/{domain}/hash_index.parquet
+        cleaned metadata parquet -> metadata/cleaned/images/{domain}/{batch_id}.parquet
+        duplicates parquet       -> metadata/cleaned/images/{domain}/{batch_id}_duplicates.parquet
+        hash index per-domain    -> metadata/cleaned/images/index/{domain}/hash_index.parquet
     - Trả: DataFrame các bản ghi KHÔNG TRÙNG để pipeline dùng tiếp
     """
     def __init__(self, minio_client, bucket: str, min_size=64, phash_threshold: int = 4):
@@ -49,14 +49,14 @@ class ImageCleaner:
             return None
 
     def _read_index_df(self, domain: str) -> pd.DataFrame:
-        idx_key = f"metadata/cleaned_images/index/{domain}/hash_index.parquet"
+        idx_key = f"metadata/cleaned/images/index/{domain}/hash_index.parquet"
         data = self._try_get_object(idx_key)
         if data is None or len(data) == 0:
             return pd.DataFrame(columns=["sha256","md5","phash64","object_key_cleaned","item_id","keyword","width","height"])
         return pd.read_parquet(io.BytesIO(data))
 
     def _write_index_df(self, domain: str, df: pd.DataFrame):
-        idx_key = f"metadata/cleaned_images/index/{domain}/hash_index.parquet"
+        idx_key = f"metadata/cleaned/images/index/{domain}/hash_index.parquet"
         bio = io.BytesIO()
         df.to_parquet(bio, index=False)
         self._put_bytes(idx_key, bio.getvalue(), content_type="application/octet-stream")
@@ -171,14 +171,14 @@ class ImageCleaner:
             if cleaned_rows:
                 df_clean_batch = pd.DataFrame([r for r in cleaned_rows if r["domain"] == domain])
                 if not df_clean_batch.empty:
-                    key = f"metadata/cleaned_images/{domain}/{batch_id}.parquet"
+                    key = f"metadata/cleaned/images/{domain}/{batch_id}.parquet"
                     bio = io.BytesIO()
                     df_clean_batch.to_parquet(bio, index=False)
                     self._put_bytes(key, bio.getvalue(), content_type="application/octet-stream")
 
             if duplicate_rows:
                 df_dup = pd.DataFrame(duplicate_rows)
-                key = f"metadata/cleaned_images/{domain}/{batch_id}_duplicates.parquet"
+                key = f"metadata/cleaned/images/{domain}/{batch_id}_duplicates.parquet"
                 bio = io.BytesIO()
                 df_dup.to_parquet(bio, index=False)
                 self._put_bytes(key, bio.getvalue(), content_type="application/octet-stream")
